@@ -1,24 +1,24 @@
-import {Readable, readable, writable} from "svelte/store";
-import type { VideoPeer } from "../WebRtc/VideoPeer";
+import {Readable, readable, Writable, writable} from "svelte/store";
 import JitsiParticipant from "lib-jitsi-meet/types/hand-crafted/JitsiParticipant";
 import JitsiTrack from "lib-jitsi-meet/types/hand-crafted/modules/RTC/JitsiTrack";
 import { MapStore } from "@workadventure/store-utils";
 import JitsiConnection from "lib-jitsi-meet/types/hand-crafted/JitsiConnection";
 import JitsiConference from "lib-jitsi-meet/types/hand-crafted/JitsiConference";
 
-class JitsiConferenceWrapper {
+type DeviceType = "video" | "audio" | "desktop";
 
+export class JitsiConferenceWrapper {
     public readonly participantStore : MapStore<string, JitsiParticipant>;
 
     public readonly streamStore : Readable<JitsiTrack[]>;
 
-    constructor(private jitsiConference: JitsiConference) {
+    private readonly _broadcastDevicesStore : Writable<DeviceType[]>;
 
+    constructor(private jitsiConference: JitsiConference) {
+        this._broadcastDevicesStore = writable<DeviceType[]>([]);
     }
 
     public static join(connection: JitsiConnection, jitsiRoomName: string): Promise<JitsiConferenceWrapper> {
-
-
 
         return new Promise((resolve, reject) => {
             const JitsiMeetJS = window.JitsiMeetJS;
@@ -188,42 +188,15 @@ class JitsiConferenceWrapper {
         });
     }
 
+    public broadcast(devices: ("video" | "audio" | "desktop")[]) {
+        this._broadcastDevicesStore.set(devices);
+    }
+
     public leave(reason?: string): Promise<unknown> {
         return this.jitsiConference.leave(reason);
     }
 
+    get broadcastDevicesStore(): Readable<DeviceType[]> {
+        return this._broadcastDevicesStore;
+    }
 }
-
-
-/**
- * A store that contains the list of (video) peers we are connected to.
- */
-function createJitsiStreamStore() {
-    const { subscribe, set, update } = writable(new Map<number, VideoPeer>());
-
-    return {
-        subscribe,
-        pushNewPeer(peer: VideoPeer) {
-            update((users) => {
-                users.set(peer.userId, peer);
-
-                //send post hog notification
-                // TODO: analytics (is it worthwhile? Maybe only the people starting the stream is enough?)
-                //analyticsClient.addNewParticipant();
-
-                return users;
-            });
-        },
-        removePeer(userId: number) {
-            update((users) => {
-                users.delete(userId);
-                return users;
-            });
-        },
-        cleanupStore() {
-            set(new Map<number, VideoPeer>());
-        },
-    };
-}
-
-export const jitsiStreamStore = createJitsiStreamStore();

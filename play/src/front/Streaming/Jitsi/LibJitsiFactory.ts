@@ -61,7 +61,7 @@ class LibJitsiFactory {
         });
     }
 
-    private loadJitsiScript(domain: string, options?: InitOptions): CancelablePromise<JitsiMeetJSType> {
+    public loadJitsiScript(domain: string, options?: InitOptions): CancelablePromise<JitsiMeetJSType> {
         if (this.jitsiLoadPromise) {
             return this.jitsiLoadPromise;
         }
