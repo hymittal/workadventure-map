@@ -38,6 +38,7 @@ export class JitsiConferenceWrapper {
                     isJoined = true;
                     resolve(jitsiConferenceWrapper);
                     console.error("conference joined")
+
                 });
             room.on(
                 JitsiMeetJS.events.conference.CONFERENCE_FAILED,
@@ -62,6 +63,58 @@ export class JitsiConferenceWrapper {
                 });
 
 
+
+            let oldTracks = new JitsiLocalTracks([]);
+
+            jitsiConferenceWrapper.localTracksStoreUnsubscribe = jitsiLocalTracksStore.subscribe((result) => {
+                if (!result) {
+                    return;
+                }
+                if (result.ok) {
+                    const tracks = result.value;
+                    if (tracks.audio !== oldTracks.audio) {
+                        if (tracks.audio === undefined && oldTracks.audio !== undefined) {
+                            room.removeTrack(oldTracks.audio);
+                        } else if (tracks.audio !== undefined) {
+                            if (oldTracks.audio !== undefined) {
+                                room.replaceTrack(oldTracks.audio, tracks.audio).catch(e => console.error("Error replacing track", e));
+                            } else {
+                                console.log("ADDING AUDIO TRACK")
+                                room.addTrack(tracks.audio).catch(e => console.error("Error adding track", e));
+                            }
+                        }
+                    }
+
+                    if (tracks.video !== oldTracks.video) {
+                        if (tracks.video === undefined && oldTracks.video !== undefined) {
+                            room.removeTrack(oldTracks.video);
+                        } else if (tracks.video !== undefined) {
+                            if (oldTracks.video !== undefined) {
+                                room.replaceTrack(oldTracks.video, tracks.video).catch(e => console.error("Error replacing track", e));
+                            } else {
+                                console.log("ADDING VIDEO TRACK")
+                                room.addTrack(tracks.video).catch(e => console.error("Error adding track", e));
+                            }
+                        }
+                    }
+
+                    if (tracks.screenSharing !== oldTracks.screenSharing) {
+                        if (tracks.screenSharing === undefined && oldTracks.screenSharing !== undefined) {
+                            room.removeTrack(oldTracks.screenSharing);
+                        } else if (tracks.screenSharing !== undefined) {
+                            if (oldTracks.screenSharing !== undefined) {
+                                room.replaceTrack(oldTracks.screenSharing, tracks.screenSharing).catch(e => console.error("Error replacing track", e));
+                            } else {
+                                room.addTrack(tracks.screenSharing).catch(e => console.error("Error adding track", e));
+                            }
+                        }
+                    }
+
+                    oldTracks = tracks;
+                } else {
+                    console.error(result.error);
+                }
+            });
 
 
             // TODO continue here
@@ -117,57 +170,6 @@ export class JitsiConferenceWrapper {
             //     }
             // }
 
-            let oldTracks = new JitsiLocalTracks([]);
-
-            jitsiConferenceWrapper.localTracksStoreUnsubscribe = jitsiLocalTracksStore.subscribe((result) => {
-                if (!result) {
-                    return;
-                }
-                if (result.ok) {
-                    const tracks = result.value;
-                    if (tracks.audio !== oldTracks.audio) {
-                        if (tracks.audio === undefined && oldTracks.audio !== undefined) {
-                            room.removeTrack(oldTracks.audio);
-                        } else if (tracks.audio !== undefined) {
-                            if (oldTracks.audio !== undefined) {
-                                room.replaceTrack(oldTracks.audio, tracks.audio).catch(e => console.error("Error replacing track", e));
-                            } else {
-                                console.log("ADDING AUDIO TRACK")
-                                room.addTrack(tracks.audio).catch(e => console.error("Error adding track", e));
-                            }
-                        }
-                    }
-
-                    if (tracks.video !== oldTracks.video) {
-                        if (tracks.video === undefined && oldTracks.video !== undefined) {
-                            room.removeTrack(oldTracks.video);
-                        } else if (tracks.video !== undefined) {
-                            if (oldTracks.video !== undefined) {
-                                room.replaceTrack(oldTracks.video, tracks.video).catch(e => console.error("Error replacing track", e));
-                            } else {
-                                console.log("ADDING VIDEO TRACK")
-                                room.addTrack(tracks.video).catch(e => console.error("Error adding track", e));
-                            }
-                        }
-                    }
-
-                    if (tracks.screenSharing !== oldTracks.screenSharing) {
-                        if (tracks.screenSharing === undefined && oldTracks.screenSharing !== undefined) {
-                            room.removeTrack(oldTracks.screenSharing);
-                        } else if (tracks.screenSharing !== undefined) {
-                            if (oldTracks.screenSharing !== undefined) {
-                                room.replaceTrack(oldTracks.screenSharing, tracks.screenSharing).catch(e => console.error("Error replacing track", e));
-                            } else {
-                                room.addTrack(tracks.screenSharing).catch(e => console.error("Error adding track", e));
-                            }
-                        }
-                    }
-
-                    oldTracks = tracks;
-                } else {
-                    console.error(result.error);
-                }
-            });
 
 
             let remoteTracks: JitsiTrack[] = [];
@@ -204,7 +206,7 @@ export class JitsiConferenceWrapper {
 
                 if (track.getType() === 'video') {
                     $('body').prepend(
-                        `<video autoplay='1' id='${participant}video${idx}' />`);
+                        `<video autoplay='1' id='${participant}video${idx}' style="position: absolute" />`);
                 } else {
                     $('body').prepend(
                         `<audio autoplay='1' id='${participant}audio${idx}' />`);
