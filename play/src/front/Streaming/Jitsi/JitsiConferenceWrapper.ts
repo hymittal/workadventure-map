@@ -74,12 +74,14 @@ export class JitsiConferenceWrapper {
                     const tracks = result.value;
                     if (tracks.audio !== oldTracks.audio) {
                         if (tracks.audio === undefined && oldTracks.audio !== undefined) {
+                            console.warn("REMOVING AUDIO TRACK")
                             room.removeTrack(oldTracks.audio);
                         } else if (tracks.audio !== undefined) {
                             if (oldTracks.audio !== undefined) {
+                                console.warn("REPLACING AUDIO TRACK")
                                 room.replaceTrack(oldTracks.audio, tracks.audio).catch(e => console.error("Error replacing track", e));
                             } else {
-                                console.log("ADDING AUDIO TRACK")
+                                console.warn("ADDING AUDIO TRACK")
                                 room.addTrack(tracks.audio).catch(e => console.error("Error adding track", e));
                             }
                         }
@@ -87,12 +89,14 @@ export class JitsiConferenceWrapper {
 
                     if (tracks.video !== oldTracks.video) {
                         if (tracks.video === undefined && oldTracks.video !== undefined) {
+                            console.warn("REMOVING VIDEO TRACK")
                             room.removeTrack(oldTracks.video);
                         } else if (tracks.video !== undefined) {
                             if (oldTracks.video !== undefined) {
+                                console.warn("REPLACING VIDEO TRACK")
                                 room.replaceTrack(oldTracks.video, tracks.video).catch(e => console.error("Error replacing track", e));
                             } else {
-                                console.log("ADDING VIDEO TRACK")
+                                console.warn("ADDING VIDEO TRACK")
                                 room.addTrack(tracks.video).catch(e => console.error("Error adding track", e));
                             }
                         }
