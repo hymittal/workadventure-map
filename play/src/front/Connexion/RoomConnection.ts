@@ -201,17 +201,6 @@ export class RoomConnection implements RoomConnection {
         availabilityStatus: AvailabilityStatus,
         lastCommandId?: string
     ) {
-        // TEEEEEEEEEEEEEEEEST
-        //libJitsiFactory.createConnection("jitsi.test.workadventu.re", "prosody.test.workadventu.re", "muc.prosody.test.workadventu.re").then((connection) => {
-        libJitsiFactory.createConnection("coremeet.workadventu.re", "prosody.workadventu.re", "muc.prosody.workadventu.re").then(async (connection) => {
-            const jitsiConference = await JitsiConferenceWrapper.join(connection, 'conferencetestfromjitsilib');
-            jitsiConferencesStore.set('conferencetestfromjitsilib', jitsiConference);
-
-            jitsiConference.broadcast(["video", "audio"]);
-
-        }).catch(e => console.error(e));
-        // TEEEEEEEEEEEEEEEEST
-
         let url = new URL(PLAY_URL, window.location.toString()).toString();
         url = url.replace("http://", "ws://").replace("https://", "wss://");
         if (!url.endsWith("/")) {

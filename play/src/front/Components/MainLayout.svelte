@@ -114,6 +114,7 @@
         {/if}
 
         {#if hasEmbedScreen}
+            <h1>EMBED SCREEN CONTAINER DISPLAYED</h1>
             <EmbedScreensContainer />
         {/if}
 

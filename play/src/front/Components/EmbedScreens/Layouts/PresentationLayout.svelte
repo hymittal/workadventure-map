@@ -1,5 +1,5 @@
 <script lang="ts">
-    import { highlightedEmbedScreen } from "../../../Stores/EmbedScreensStore";
+    import { highlightedEmbedScreen } from "../../../Stores/HighlightedEmbedScreenStore";
     import CamerasContainer from "../CamerasContainer.svelte";
     import MediaBox from "../../Video/MediaBox.svelte";
     import { coWebsiteManager } from "../../../WebRtc/CoWebsiteManager";

@@ -6,19 +6,21 @@ import JitsiConnection from "lib-jitsi-meet/types/hand-crafted/JitsiConnection";
 import JitsiConference from "lib-jitsi-meet/types/hand-crafted/JitsiConference";
 import {jitsiLocalTracksStore} from "./JitsiLocalTracksStore";
 import {JitsiLocalTracks} from "./JitsiLocalTracks";
+import {JitsiTrackWrapper} from "./JitsiTrackWrapper";
 
 export type DeviceType = "video" | "audio" | "desktop";
 
 export class JitsiConferenceWrapper {
     public readonly participantStore : MapStore<string, JitsiParticipant>;
 
-    public readonly streamStore : Readable<JitsiTrack[]>;
+    private _streamStore : Writable<JitsiTrackWrapper[]>;
 
     private readonly _broadcastDevicesStore : Writable<DeviceType[]>;
 
     private localTracksStoreUnsubscribe: Unsubscriber|undefined;
 
     constructor(private jitsiConference: JitsiConference) {
+        this._streamStore = writable<JitsiTrackWrapper[]>([]);
         this._broadcastDevicesStore = writable<DeviceType[]>([]);
     }
 
@@ -176,16 +178,17 @@ export class JitsiConferenceWrapper {
 
 
 
-            let remoteTracks: JitsiTrack[] = [];
+            let remoteTracks: JitsiTrackWrapper[] = [];
 
             /**
              * Handles remote tracks
-             * @param track JitsiTrack object
+             * @param track JitsiTrackWrapper object
              */
             function onRemoteTrack(track: JitsiTrack) {
                 if (track.isLocal()) {
                     return;
                 }
+                console.warn("REMOTE TRACK ADDED")
                 const participant = track.getParticipantId();
 
                 if (!remoteTracks[participant]) {
@@ -206,22 +209,31 @@ export class JitsiConferenceWrapper {
                     deviceId =>
                         console.log(
                             `track audio output device was changed to ${deviceId}`));
-                const id = participant + track.getType() + idx;
+                /*const id = participant + track.getType() + idx;
 
                 if (track.getType() === 'video') {
                     $('body').prepend(
-                        `<video autoplay='1' id='${participant}video${idx}' style="position: absolute" />`);
+                        `<video autoplay='1' id='${participant}video${idx}'  />`);
                 } else {
                     $('body').prepend(
                         `<audio autoplay='1' id='${participant}audio${idx}' />`);
                 }
-                track.attach(document.getElementById(`${id}`));
+                track.attach(document.getElementById(`${id}`));*/
+
+                jitsiConferenceWrapper._streamStore.update((tracks) => {
+                    tracks.push(new JitsiTrackWrapper(track));
+                    return tracks;
+                });
             }
 
 
             room.on(JitsiMeetJS.events.conference.TRACK_ADDED, onRemoteTrack);
             room.on(JitsiMeetJS.events.conference.TRACK_REMOVED, track => {
                 console.log(`track removed!!!${track}`);
+                jitsiConferenceWrapper._streamStore.update((tracks) => {
+                    tracks = tracks.filter((trackWrapper) => trackWrapper.jitsiTrack === track);
+                    return tracks;
+                });
             });
 
             /*room.on(JitsiMeetJS.events.conference.USER_JOINED, id => {
@@ -258,5 +270,9 @@ export class JitsiConferenceWrapper {
 
     get broadcastDevicesStore(): Readable<DeviceType[]> {
         return this._broadcastDevicesStore;
+    }
+
+    get streamStore(): Readable<JitsiTrackWrapper[]> {
+        return this._streamStore;
     }
 }
